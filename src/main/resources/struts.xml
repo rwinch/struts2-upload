@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE struts PUBLIC
+"-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+"http://struts.apache.org/dtds/struts-2.0.dtd">
+
+<struts>
+    <constant name="struts.devMode" value="true" />
+    <constant name="struts.multipart.parser" value="spring"/>
+    <bean type="org.apache.struts2.dispatcher.multipart.MultiPartRequest" name="spring"  class="sample.SpringMultipartParser" scope="default"/>
+
+    <package name="default" namespace="/" extends="struts-default">
+
+        <action name="index" class="sample.UploadAction">
+            <result name="success">index.jsp</result>
+        </action>
+
+        <action name="upload" class="sample.UploadAction">
+            <result name="success">result.jsp</result>
+            <result name="input">index.jsp</result>
+        </action>
+    </package>
+</struts>

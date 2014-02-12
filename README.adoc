@@ -1,0 +1,9 @@
+= Struts2 Upload & Spring Security
+
+Demonstrates how to use Struts 2 with Spring Security's CSRF protection
+
+== Running with Maven
+
+To run use:
+
+  mvn tomcat7:run
