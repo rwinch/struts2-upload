@@ -36,108 +36,122 @@ import com.opensymphony.xwork2.util.logging.Logger;
 import com.opensymphony.xwork2.util.logging.LoggerFactory;
 
 public class SpringMultipartParser implements MultiPartRequest {
-    private static final Logger LOG = LoggerFactory.getLogger(MultiPartRequest.class);
+	private static final Logger LOG = LoggerFactory.getLogger(MultiPartRequest.class);
 
-    private List<String> errors = new ArrayList<String>();
+	private List<String> errors = new ArrayList<String>();
 
-    private MultiValueMap<String, MultipartFile> multipartMap;
+	private MultiValueMap<String, MultipartFile> multipartMap;
 
-    private MultipartHttpServletRequest multipartRequest;
+	private MultipartHttpServletRequest multipartRequest;
 
-    private MultiValueMap<String, File> multiFileMap = new LinkedMultiValueMap<String, File>();
+	private MultiValueMap<String, File> multiFileMap = new LinkedMultiValueMap<String, File>();
+	
+	private File dir;
 
-    public void parse(HttpServletRequest request, String saveDir)
-            throws IOException {
-        multipartRequest =
-                WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class);
+	public void parse(HttpServletRequest request, String saveDir) throws IOException {
+		multipartRequest = WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class);
 
-        if(multipartRequest == null) {
-            LOG.warn("Unable to MultipartHttpServletRequest");
-            errors.add("Unable to MultipartHttpServletRequest");
-            return;
-        }
-        multipartMap = multipartRequest.getMultiFileMap();
-        for(Entry<String, List<MultipartFile>> fileEntry : multipartMap.entrySet()) {
-            String fieldName = fileEntry.getKey();
-            for(MultipartFile file : fileEntry.getValue()) {
-                File temp = File.createTempFile("upload", ".dat");
-                file.transferTo(temp);
-                multiFileMap.add(fieldName, temp);
-            }
-        }
-    }
+		if (multipartRequest == null) {
+			LOG.warn("Unable to MultipartHttpServletRequest");
+			errors.add("Unable to MultipartHttpServletRequest");
+			return;
+		}
+		multipartMap = multipartRequest.getMultiFileMap();
+		dir = new File(saveDir);
+		if(!dir.exists())dir.mkdirs();
+		// for(Entry<String, List<MultipartFile>> fileEntry :
+		// multipartMap.entrySet()) {
+		// String fieldName = fileEntry.getKey();
+		// for(MultipartFile file : fileEntry.getValue()) {
+		// File temp = File.createTempFile("upload", ".dat");
+		// file.transferTo(temp);
+		// multiFileMap.add(fieldName, temp);
+		// }
+		// }
+	}
 
-    public Enumeration<String> getFileParameterNames() {
-        return Collections.enumeration(multipartMap.keySet());
-    }
+	public Enumeration<String> getFileParameterNames() {
+		return Collections.enumeration(multipartMap.keySet());
+	}
 
-    public String[] getContentType(String fieldName) {
-        List<MultipartFile> files = multipartMap.get(fieldName);
-        if(files == null) {
-            return null;
-        }
-        String[] contentTypes = new String[files.size()];
-        int i = 0;
-        for(MultipartFile file : files) {
-            contentTypes[i++] = file.getContentType();
-        }
-        return contentTypes;
-    }
+	public String[] getContentType(String fieldName) {
+		List<MultipartFile> files = multipartMap.get(fieldName);
+		if (files == null) {
+			return null;
+		}
+		String[] contentTypes = new String[files.size()];
+		int i = 0;
+		for (MultipartFile file : files) {
+			contentTypes[i++] = file.getContentType();
+		}
+		return contentTypes;
+	}
 
-    public File[] getFile(String fieldName) {
-        List<File> files = multiFileMap.get(fieldName);
-        return files == null ? null : files.toArray(new File[files.size()]);
-    }
+	public File[] getFile(String fieldName) {
+		List<MultipartFile> files = multipartMap.get(fieldName);
+		File[] result = new File[files.size()];
+		for(int i=0;i<result.length;i++){
+			try {
+				File temp = File.createTempFile("upload", ".dat",dir);
+				files.get(i).transferTo(temp);
+				result[i]=temp;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		return result;
+	}
 
-    public String[] getFileNames(String fieldName) {
-        List<MultipartFile> files = multipartMap.get(fieldName);
-        if(files == null) {
-            return null;
-        }
-        String[] fileNames = new String[files.size()];
-        int i = 0;
-        for(MultipartFile file : files) {
-            fileNames[i++] = file.getOriginalFilename();
-        }
-        return fileNames;
-    }
+	public String[] getFileNames(String fieldName) {
+		List<MultipartFile> files = multipartMap.get(fieldName);
+		if (files == null) {
+			return null;
+		}
+		String[] fileNames = new String[files.size()];
+		int i = 0;
+		for (MultipartFile file : files) {
+			fileNames[i++] = file.getOriginalFilename();
+		}
+		return fileNames;
+	}
 
-    public String[] getFilesystemName(String fieldName) {
-        List<File> files = multiFileMap.get(fieldName);
-        if(files == null) {
-            return null;
-        }
-        String[] fileNames = new String[files.size()];
-        int i = 0;
-        for(File file : files) {
-            fileNames[i++] = file.getName();
-        }
-        return fileNames;
-    }
+	public String[] getFilesystemName(String fieldName) {
+		List<File> files = multiFileMap.get(fieldName);
+		if (files == null) {
+			return null;
+		}
+		String[] fileNames = new String[files.size()];
+		int i = 0;
+		for (File file : files) {
+			fileNames[i++] = file.getName();
+		}
+		return fileNames;
+	}
 
-    public String getParameter(String name) {
-        return multipartRequest.getParameter(name);
-    }
+	public String getParameter(String name) {
+		return multipartRequest.getParameter(name);
+	}
 
-    public Enumeration<String> getParameterNames() {
-        return multipartRequest.getParameterNames();
-    }
+	public Enumeration<String> getParameterNames() {
+		return multipartRequest.getParameterNames();
+	}
 
-    public String[] getParameterValues(String name) {
-        return multipartRequest.getParameterValues(name);
-    }
+	public String[] getParameterValues(String name) {
+		return multipartRequest.getParameterValues(name);
+	}
 
-    public List getErrors() {
-        return errors;
-    }
+	public List getErrors() {
+		return errors;
+	}
 
-    public void cleanUp() {
-        for(List<File> files : multiFileMap.values()) {
-            for(File file : files) {
-                file.delete();
-            }
-        }
+	public void cleanUp() {
+		for (List<File> files : multiFileMap.values()) {
+			for (File file : files) {
+				file.delete();
+			}
+		}
 
-        // Spring takes care of the original File objects
-    }
+		// Spring takes care of the original File objects
+	}
 }
